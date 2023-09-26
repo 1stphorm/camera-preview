@@ -306,15 +306,20 @@ public class CameraActivity extends Fragment {
             );
     }
 
-    private void setDefaultCameraId() {
-        // Find the total number of cameras available
+    private int getNumberOfCameras() {
+      if (numberOfCameras == 0) {
         numberOfCameras = Camera.getNumberOfCameras();
+      }
 
+      return numberOfCameras;
+    }
+
+    private void setDefaultCameraId() {
         int facing = "front".equals(defaultCamera) ? Camera.CameraInfo.CAMERA_FACING_FRONT : Camera.CameraInfo.CAMERA_FACING_BACK;
 
         // Find the ID of the default camera
         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-        for (int i = 0; i < numberOfCameras; i++) {
+        for (int i = 0; i < getNumberOfCameras(); i++) {
             Camera.getCameraInfo(i, cameraInfo);
             if (cameraInfo.facing == facing) {
                 defaultCameraId = i;
@@ -429,10 +434,10 @@ public class CameraActivity extends Fragment {
 
     public void switchCamera() {
         // check for availability of multiple cameras
-        if (numberOfCameras == 1) {
+        if (getNumberOfCameras() == 1) {
             //There is only one camera available
         } else {
-            Log.d(TAG, "numberOfCameras: " + numberOfCameras);
+            Log.d(TAG, "numberOfCameras: " + getNumberOfCameras());
 
             // OK, we have multiple cameras. Release this camera -> cameraCurrentlyLocked
             if (mCamera != null) {
@@ -444,7 +449,7 @@ public class CameraActivity extends Fragment {
 
             Log.d(TAG, "cameraCurrentlyLocked := " + Integer.toString(cameraCurrentlyLocked));
             try {
-                cameraCurrentlyLocked = (cameraCurrentlyLocked + 1) % numberOfCameras;
+                cameraCurrentlyLocked = (cameraCurrentlyLocked + 1) % getNumberOfCameras();
                 Log.d(TAG, "cameraCurrentlyLocked new: " + cameraCurrentlyLocked);
             } catch (Exception exception) {
                 Log.d(TAG, exception.getMessage());
