@@ -8,8 +8,6 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -28,15 +26,14 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.Surface;
-import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
+
 import androidx.exifinterface.media.ExifInterface;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -87,7 +84,6 @@ public class CameraActivity extends Fragment {
     private RecordingState mRecordingState = RecordingState.INITIALIZING;
     private MediaRecorder mRecorder = null;
     private String recordFilePath;
-    private float opacity;
 
     // The first rear facing camera
     private int defaultCameraId;
@@ -330,15 +326,16 @@ public class CameraActivity extends Fragment {
 
     @Override
     public void onResume() {
+        // This gets called when getting started AND after the app gets resumed.
         super.onResume();
 
-        mCamera = Camera.open(defaultCameraId);
+        // Make sure that we load the currently "locked" camera. If the camera gets changed
+        // during use, we want to "restore" that camera back as soon as we come back to the app.
+        mCamera = Camera.open(cameraCurrentlyLocked);
 
-        if (cameraParameters != null) {
+        if (cameraCurrentlyLocked == 0 && cameraParameters != null) {
             mCamera.setParameters(cameraParameters);
         }
-
-        cameraCurrentlyLocked = defaultCameraId;
 
         if (mPreview.mPreviewSize == null) {
             mPreview.setCamera(mCamera, cameraCurrentlyLocked);
@@ -389,6 +386,7 @@ public class CameraActivity extends Fragment {
         // Because the Camera object is a shared resource, it's very important to release it when the activity is paused.
         if (mCamera != null) {
             setDefaultCameraId();
+
             mPreview.setCamera(null, -1);
             mCamera.setPreviewCallback(null);
             mCamera.release();
@@ -706,7 +704,6 @@ public class CameraActivity extends Fragment {
 
     public void setOpacity(final float opacity) {
         Log.d(TAG, "set opacity:" + opacity);
-        this.opacity = opacity;
         mPreview.setOpacity(opacity);
     }
 
